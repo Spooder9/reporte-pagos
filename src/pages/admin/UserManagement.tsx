@@ -1,15 +1,48 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useProfiles } from '../../hooks/useProfiles'
-import { CheckCircle, Plus, X, Loader2 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { CheckCircle, Plus, X, Loader2, Pencil, Save } from 'lucide-react'
 import LoadingSpinner from '../../components/LoadingSpinner'
 
+type Role = 'admin' | 'empleado' | 'user'
+
+const ROLE_OPTIONS: { value: Role; label: string }[] = [
+  { value: 'admin',    label: 'Admin' },
+  { value: 'empleado', label: 'Empleado' },
+  { value: 'user',     label: 'Miembro' },
+]
+
+function roleBadgeClass(role: string) {
+  if (role === 'admin')    return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+  if (role === 'empleado') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+  return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+}
+
+function roleLabel(role: string) {
+  if (role === 'admin')    return 'Admin'
+  if (role === 'empleado') return 'Empleado'
+  return 'Miembro'
+}
+
+function avatarColor(role: string) {
+  if (role === 'admin')    return 'bg-red-600'
+  if (role === 'empleado') return 'bg-blue-500'
+  return 'bg-gray-500'
+}
+
 export default function UserManagement() {
+  const { profile: me } = useAuth()
   const { profiles, loading, refetch } = useProfiles()
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Role editing state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [pendingRole, setPendingRole] = useState<Role>('user')
+  const [savingRole, setSavingRole] = useState(false)
 
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -36,9 +69,8 @@ export default function UserManagement() {
       return
     }
 
-    // Actualizar teléfono en el perfil si se proporcionó
     if (form.phone && data.user?.id) {
-      await supabase.from('profiles').update({ phone: form.phone }).eq('id', data.user.id)
+      await supabase.from('profiles').update({ phone: form.phone } as any).eq('id', data.user.id)
     }
 
     setSuccess('Usuario creado. Si el email necesita confirmación, el usuario recibirá un correo.')
@@ -47,6 +79,33 @@ export default function UserManagement() {
     setSaving(false)
     setTimeout(() => refetch(), 1500)
     setTimeout(() => setSuccess(''), 5000)
+  }
+
+  const startEditRole = (id: string, currentRole: Role) => {
+    setEditingId(id)
+    setPendingRole(currentRole)
+  }
+
+  const cancelEditRole = () => {
+    setEditingId(null)
+  }
+
+  const saveRole = async (id: string) => {
+    setSavingRole(true)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: pendingRole } as any)
+      .eq('id', id)
+
+    setSavingRole(false)
+    if (error) {
+      alert('Error al actualizar el rol: ' + error.message)
+      return
+    }
+    setEditingId(null)
+    setSuccess('Rol actualizado correctamente.')
+    setTimeout(() => setSuccess(''), 4000)
+    refetch()
   }
 
   if (loading) return <LoadingSpinner />
@@ -65,7 +124,7 @@ export default function UserManagement() {
       </div>
 
       {success && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl">
+        <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl">
           <CheckCircle className="w-5 h-5 flex-shrink-0" />
           <span>{success}</span>
         </div>
@@ -109,28 +168,73 @@ export default function UserManagement() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {profiles.map(p => (
-          <div key={p.id} className="card flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 ${p.role === 'admin' ? 'bg-red-600' : p.role === 'empleado' ? 'bg-blue-500' : 'bg-gray-500'}`}>
-              {p.name?.charAt(0) ?? '?'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-gray-800 dark:text-gray-100">{p.name}</p>
-                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                  p.role === 'admin' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' :
-                  p.role === 'empleado' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' :
-                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                }`}>
-                  {p.role === 'admin' ? 'Admin' : p.role === 'empleado' ? 'Empleado' : 'Miembro'}
-                </span>
+        {profiles.map(p => {
+          const isEditing = editingId === p.id
+          const isSelf = p.id === me?.id
+
+          return (
+            <div key={p.id} className="card flex items-start gap-4">
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 ${avatarColor(p.role)}`}>
+                {p.name?.charAt(0) ?? '?'}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{p.email}</p>
-              {p.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{p.phone}</p>}
-              <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Desde {p.created_at?.split('T')[0]}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{p.name}</p>
+                    {isSelf && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500">(tú)</span>
+                    )}
+                  </div>
+                  {!isSelf && !isEditing && (
+                    <button
+                      onClick={() => startEditRole(p.id, p.role as Role)}
+                      className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      title="Cambiar rol"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Role display / editor */}
+                {isEditing ? (
+                  <div className="mt-2 space-y-2">
+                    <select
+                      value={pendingRole}
+                      onChange={e => setPendingRole(e.target.value as Role)}
+                      className="input-field text-sm py-1.5"
+                    >
+                      {ROLE_OPTIONS.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => saveRole(p.id)}
+                        disabled={savingRole || pendingRole === p.role}
+                        className="btn-primary flex items-center gap-1.5 text-xs py-1.5 px-3"
+                      >
+                        {savingRole ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        Guardar
+                      </button>
+                      <button onClick={cancelEditRole} className="btn-secondary text-xs py-1.5 px-3">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <span className={`mt-1 inline-block px-2 py-0.5 text-xs font-medium rounded-full ${roleBadgeClass(p.role)}`}>
+                    {roleLabel(p.role)}
+                  </span>
+                )}
+
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">{p.email}</p>
+                {p.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{p.phone}</p>}
+                <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Desde {p.created_at?.split('T')[0]}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
