@@ -7,7 +7,7 @@ export interface Database {
           name: string
           email: string
           phone: string | null
-          role: 'admin' | 'user'
+          role: 'admin' | 'empleado' | 'user'
           created_at: string
         }
         Insert: {
@@ -15,13 +15,13 @@ export interface Database {
           name: string
           email: string
           phone?: string | null
-          role?: 'admin' | 'user'
+          role?: 'admin' | 'empleado' | 'user'
           created_at?: string
         }
         Update: {
           name?: string
           phone?: string | null
-          role?: 'admin' | 'user'
+          role?: 'admin' | 'empleado' | 'user'
         }
       }
       debts: {
@@ -40,6 +40,7 @@ export interface Database {
           status: 'active' | 'completed' | 'overdue'
           interest_description: string | null
           created_by: string | null
+          managed_by: string | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['debts']['Row'], 'id' | 'created_at'>

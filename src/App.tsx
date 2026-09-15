@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Login from './pages/Login'
 import Layout from './components/Layout'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -18,6 +19,9 @@ import ReportRentalPayment from './pages/user/ReportRentalPayment'
 import Approvals from './pages/admin/Approvals'
 import PaymentHistory from './pages/admin/PaymentHistory'
 import PaymentStatus from './pages/user/PaymentStatus'
+import EmpleadoDashboard from './pages/empleado/Dashboard'
+import ManagedDebts from './pages/empleado/ManagedDebts'
+import EmpleadoApprovals from './pages/empleado/EmpleadoApprovals'
 
 function PrivateRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { session, profile, loading } = useAuth()
@@ -42,7 +46,9 @@ function AppRoutes() {
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={
-          profile?.role === 'admin' ? <AdminDashboard /> : <UserDashboard />
+          profile?.role === 'admin' ? <AdminDashboard /> :
+          profile?.role === 'empleado' ? <EmpleadoDashboard /> :
+          <UserDashboard />
         } />
         {/* Admin - Créditos */}
         <Route path="crear-deuda" element={<PrivateRoute adminOnly><DebtCreate /></PrivateRoute>} />
@@ -64,6 +70,9 @@ function AppRoutes() {
         <Route path="reportar-alquiler" element={<PrivateRoute><ReportRentalPayment /></PrivateRoute>} />
         {/* User - Estado de pagos */}
         <Route path="mis-pagos" element={<PrivateRoute><PaymentStatus /></PrivateRoute>} />
+        {/* Empleado */}
+        <Route path="gestion-deudas" element={<PrivateRoute><ManagedDebts /></PrivateRoute>} />
+        <Route path="gestion-aprobaciones" element={<PrivateRoute><EmpleadoApprovals /></PrivateRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -72,10 +81,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }

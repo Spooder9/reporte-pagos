@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import {
   LayoutDashboard, CreditCard, Users, BarChart3, FileText,
   LogOut, Menu, X, Bell, CreditCard as CardIcon, PlusCircle,
-  Car, TrendingUp, CheckCircle, Clock
+  Car, TrendingUp, CheckCircle, Clock, Sun, Moon
 } from 'lucide-react'
 import { usePendingCount } from '../hooks/usePendingApprovals'
 
@@ -21,8 +22,15 @@ function PendingBadge() {
   )
 }
 
+function roleLabel(role?: string) {
+  if (role === 'admin') return 'Administrador'
+  if (role === 'empleado') return 'Empleado'
+  return 'Miembro'
+}
+
 export default function Layout() {
   const { profile, signOut } = useAuth()
+  const { theme, toggle } = useTheme()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const isAdmin = profile?.role === 'admin'
@@ -81,7 +89,38 @@ export default function Layout() {
     },
   ]
 
-  const groups = isAdmin ? adminGroups : userGroups
+  const empleadoGroups: NavGroup[] = [
+    {
+      label: 'General',
+      items: [{ to: '/dashboard', label: 'Mi Panel', icon: LayoutDashboard }],
+    },
+    {
+      label: 'Mi Cartera',
+      items: [
+        { to: '/gestion-deudas', label: 'Deudas Asignadas', icon: CreditCard },
+        { to: '/gestion-aprobaciones', label: 'Aprobar Pagos', icon: CheckCircle },
+      ],
+    },
+    {
+      label: 'Mis Créditos',
+      items: [
+        { to: '/mis-deudas', label: 'Mis Deudas', icon: CreditCard },
+        { to: '/reportar-pago', label: 'Reportar Pago', icon: FileText },
+        { to: '/mis-pagos', label: 'Estado de Pagos', icon: Clock },
+      ],
+    },
+    {
+      label: 'Mis Alquileres',
+      items: [
+        { to: '/mis-vehiculos', label: 'Mis Vehículos', icon: Car },
+        { to: '/reportar-alquiler', label: 'Reportar Alquiler', icon: TrendingUp },
+      ],
+    },
+  ]
+
+  const groups = profile?.role === 'admin' ? adminGroups :
+    profile?.role === 'empleado' ? empleadoGroups :
+    userGroups
   const initial = profile?.name?.charAt(0) ?? '?'
 
   const handleLogout = async () => { await signOut(); navigate('/login') }
@@ -94,8 +133,8 @@ export default function Layout() {
           <CardIcon className="w-5 h-5 text-white" />
         </div>
         <div>
-          <span className="text-white font-bold text-sm leading-tight block">ReportePagos</span>
-          <span className="text-gray-400 text-xs">{profile?.role === 'admin' ? 'Administrador' : 'Usuario'}</span>
+          <span className="text-white font-bold text-sm leading-tight block">FlowDebt</span>
+          <span className="text-gray-400 text-xs">{roleLabel(profile?.role)}</span>
         </div>
       </div>
 
@@ -146,7 +185,7 @@ export default function Layout() {
   )
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden transition-colors duration-200">
       <aside className="hidden lg:flex flex-col w-64 bg-gray-800 flex-shrink-0">
         <SidebarContent />
       </aside>
@@ -164,32 +203,40 @@ export default function Layout() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3 flex items-center justify-between flex-shrink-0">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-3 flex items-center justify-between flex-shrink-0 transition-colors duration-200">
           <div className="flex items-center gap-3">
-            <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-700">
+            <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
               <Menu className="w-6 h-6" />
             </button>
             <div className="lg:hidden flex items-center gap-2">
               <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center">
                 <CardIcon className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold text-gray-800 text-sm">ReportePagos</span>
+              <span className="font-bold text-gray-800 dark:text-white text-sm">FlowDebt</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggle}
+              className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <button
               onClick={() => isAdmin && navigate('/aprobaciones')}
-              className="relative p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="relative p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               title={isAdmin ? 'Ver aprobaciones pendientes' : ''}
             >
               <Bell className="w-5 h-5" />
               {isAdmin && <PendingBadge />}
             </button>
-            <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+            <div className="flex items-center gap-2 pl-3 border-l border-gray-200 dark:border-gray-700">
               <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-sm">
                 {initial}
               </div>
-              <span className="hidden sm:block text-sm font-medium text-gray-700">{profile?.name}</span>
+              <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200">{profile?.name}</span>
             </div>
           </div>
         </header>

@@ -26,15 +26,15 @@ export default function Login() {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-2xl shadow-2xl mb-4">
           <CreditCard className="w-9 h-9 text-white" />
         </div>
-        <h1 className="text-4xl font-extrabold text-white tracking-tight">ReportePagos</h1>
+        <h1 className="text-4xl font-extrabold text-white tracking-tight">FlowDebt</h1>
         <p className="text-gray-400 mt-2 text-sm">Sistema de gestión de créditos y deudas</p>
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
         <div className="p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Iniciar sesión</h2>
-          <p className="text-gray-400 text-sm mb-6">Ingresa a tu cuenta</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Iniciar sesión</h2>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">Ingresa a tu cuenta</p>
 
           {error && (
             <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-5 text-sm">
@@ -80,22 +80,9 @@ export default function Login() {
           </form>
         </div>
 
-        <div className="px-8 py-5 bg-gray-50 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center mb-3 font-medium">Cuentas de demostración</p>
-          <div className="space-y-2 text-xs text-gray-500">
-            <div className="flex justify-between bg-white border border-gray-200 rounded-lg px-3 py-2">
-              <span className="font-semibold text-red-600">Admin</span>
-              <span>admin@demo.com / admin123</span>
-            </div>
-            <div className="flex justify-between bg-white border border-gray-200 rounded-lg px-3 py-2">
-              <span className="font-semibold text-gray-600">Usuario</span>
-              <span>juan@demo.com / user123</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <p className="mt-8 text-gray-600 text-xs">© 2024 ReportePagos · Todos los derechos reservados</p>
+      <p className="mt-8 text-gray-500 text-xs">© 2025 FlowDebt · Todos los derechos reservados</p>
     </div>
   )
 }

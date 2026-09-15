@@ -55,8 +55,8 @@ export default function UserManagement() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Usuarios</h1>
-          <p className="text-gray-500 text-sm mt-1">{profiles.length} usuarios registrados</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Usuarios</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{profiles.length} usuarios registrados</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary flex items-center gap-2">
           {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -73,7 +73,7 @@ export default function UserManagement() {
 
       {showForm && (
         <div className="card">
-          <h2 className="text-base font-semibold text-gray-800 mb-4">Crear nuevo usuario</h2>
+          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4">Crear nuevo usuario</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -111,19 +111,23 @@ export default function UserManagement() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {profiles.map(p => (
           <div key={p.id} className="card flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 ${p.role === 'admin' ? 'bg-red-600' : 'bg-gray-500'}`}>
+            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 ${p.role === 'admin' ? 'bg-red-600' : p.role === 'empleado' ? 'bg-blue-500' : 'bg-gray-500'}`}>
               {p.name?.charAt(0) ?? '?'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-gray-800">{p.name}</p>
-                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${p.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-                  {p.role === 'admin' ? 'Admin' : 'Usuario'}
+                <p className="font-semibold text-gray-800 dark:text-gray-100">{p.name}</p>
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                  p.role === 'admin' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' :
+                  p.role === 'empleado' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' :
+                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                }`}>
+                  {p.role === 'admin' ? 'Admin' : p.role === 'empleado' ? 'Empleado' : 'Miembro'}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 truncate">{p.email}</p>
-              {p.phone && <p className="text-xs text-gray-400 mt-0.5">{p.phone}</p>}
-              <p className="text-xs text-gray-300 mt-1">Desde {p.created_at?.split('T')[0]}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{p.email}</p>
+              {p.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{p.phone}</p>}
+              <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Desde {p.created_at?.split('T')[0]}</p>
             </div>
           </div>
         ))}

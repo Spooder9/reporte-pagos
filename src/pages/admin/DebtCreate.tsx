@@ -17,6 +17,7 @@ export default function DebtCreate() {
   const [form, setForm] = useState({
     code: '', description: '', product: '', amount: '', interest_rate: '',
     months: '', start_date: new Date().toISOString().split('T')[0], interest_description: '',
+    managed_by: '',
   })
   const [members, setMembers] = useState([{ userId: '', share: '100' }])
 
@@ -62,6 +63,7 @@ export default function DebtCreate() {
       total_amount: totalAmount, start_date: form.start_date,
       interest_description: form.interest_description || null,
       created_by: profile?.id ?? null, status: 'active',
+      managed_by: form.managed_by || null,
     }).select().single()
 
     if (debtErr || !debt) {
@@ -76,7 +78,7 @@ export default function DebtCreate() {
     await supabase.from('debt_members').insert(membersData)
 
     setSuccess(true)
-    setForm({ code: '', description: '', product: '', amount: '', interest_rate: '', months: '', start_date: new Date().toISOString().split('T')[0], interest_description: '' })
+    setForm({ code: '', description: '', product: '', amount: '', interest_rate: '', months: '', start_date: new Date().toISOString().split('T')[0], interest_description: '', managed_by: '' })
     setMembers([{ userId: '', share: '100' }])
     setSaving(false)
     setTimeout(() => setSuccess(false), 4000)
@@ -213,6 +215,24 @@ export default function DebtCreate() {
           </div>
           {errors.members && <p className="text-red-500 text-xs">{errors.members}</p>}
           {errors.share && <p className="text-red-500 text-xs">{errors.share}</p>}
+        </div>
+
+        <div className="card space-y-4">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide pb-2 border-b border-gray-100">Gestor asignado</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Empleado responsable de esta deuda</label>
+            <select
+              value={form.managed_by}
+              onChange={e => setForm(f => ({ ...f, managed_by: e.target.value }))}
+              className="input-field"
+            >
+              <option value="">Sin gestor asignado (solo admin)</option>
+              {profiles.filter(p => p.role === 'empleado').map(p => (
+                <option key={p.id} value={p.id}>{p.name} ({p.email})</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">El gestor podrá ver y aprobar pagos de esta deuda</p>
+          </div>
         </div>
 
         <button type="submit" disabled={saving} className="btn-primary w-full py-3 text-base flex items-center justify-center gap-2">

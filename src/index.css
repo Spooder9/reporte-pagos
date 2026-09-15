@@ -2,35 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
-  .btn-primary {
-    @apply bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed;
-  }
-  .btn-secondary {
-    @apply bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
-  }
-  .btn-outline {
-    @apply border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
-  }
-  .btn-ghost {
-    @apply text-gray-600 hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition-colors duration-150;
-  }
-  .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900 placeholder-gray-400 transition-shadow;
-  }
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
-  }
-  .stat-card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center gap-4;
-  }
-  .badge-active {
-    @apply px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full;
-  }
-  .badge-overdue {
-    @apply px-2.5 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full;
-  }
-  .badge-completed {
-    @apply px-2.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full;
+@layer base {
+  body {
+    @apply bg-gray-100 dark:bg-gray-900 transition-colors duration-200;
   }
 }
+
+@layer components {
+  .btn-primary {
+    @apply bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+  .btn-outline {
+    @apply border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+  .btn-ghost {
+    @apply text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-150;
+  }
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-shadow;
+  }
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+  }
+  .stat-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 flex items-center gap-4;
+  }
+  .badge-active {
+    @apply px-2.5 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full;
+  }
+  .badge-overdue {
+    @apply px-2.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-xs font-semibold rounded-full;
+  }
+  .badge-completed {
+    @apply px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-semibold rounded-full;
+  }
+}
+
+/*
+  Global dark mode text remapping.
+  Outside @layer so specificity is higher than Tailwind utilities,
+  making gray text legible on dark card backgrounds without touching every page.
+*/
+html.dark .text-gray-900 { color: rgb(243 244 246); }   /* → gray-100 */
+html.dark .text-gray-800 { color: rgb(229 231 235); }   /* → gray-200 */
+html.dark .text-gray-700 { color: rgb(209 213 219); }   /* → gray-300 */
+html.dark .text-gray-600 { color: rgb(156 163 175); }   /* → gray-400 */
+html.dark .text-gray-500 { color: rgb(156 163 175); }   /* → gray-400 */
+
+/* Explicit dark: overrides always win (added via !important) */
+html.dark .dark\:text-white        { color: rgb(255 255 255) !important; }
+html.dark .dark\:text-gray-100     { color: rgb(243 244 246) !important; }
+html.dark .dark\:text-gray-200     { color: rgb(229 231 235) !important; }
+html.dark .dark\:text-gray-300     { color: rgb(209 213 219) !important; }
+html.dark .dark\:text-gray-400     { color: rgb(156 163 175) !important; }
+
+/* Colored text stays colored */
+html.dark .text-red-600,
+html.dark .text-red-700   { color: rgb(239 68 68); }
+html.dark .text-green-600,
+html.dark .text-green-700 { color: rgb(34 197 94); }
+html.dark .text-blue-600,
+html.dark .text-blue-700  { color: rgb(96 165 250); }
+html.dark .text-yellow-600 { color: rgb(250 204 21); }
+
+/* Table and divider lines */
+html.dark .divide-gray-200 > * + *,
+html.dark .divide-y > * + *       { border-color: rgb(55 65 81); }
+html.dark .border-gray-200        { border-color: rgb(55 65 81); }
+html.dark .border-gray-100        { border-color: rgb(31 41 55); }
