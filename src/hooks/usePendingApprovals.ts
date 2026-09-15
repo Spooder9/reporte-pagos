@@ -107,23 +107,22 @@ export function usePendingApprovals() {
   useEffect(() => { fetch() }, [fetch])
 
   const approve = async (item: PendingPayment, reviewerId: string) => {
-    const table = item.type === 'credit' ? 'payments' : 'rental_payments'
-    await supabase.from(table).update({
-      status: 'approved',
-      reviewed_by: reviewerId,
-      reviewed_at: new Date().toISOString(),
-    }).eq('id', item.id)
+    const payload = { status: 'approved', reviewed_by: reviewerId, reviewed_at: new Date().toISOString() }
+    if (item.type === 'credit') {
+      await supabase.from('payments').update(payload as any).eq('id', item.id)
+    } else {
+      await supabase.from('rental_payments').update(payload as any).eq('id', item.id)
+    }
     await fetch()
   }
 
   const reject = async (item: PendingPayment, reviewerId: string, reason: string) => {
-    const table = item.type === 'credit' ? 'payments' : 'rental_payments'
-    await supabase.from(table).update({
-      status: 'rejected',
-      reviewed_by: reviewerId,
-      reviewed_at: new Date().toISOString(),
-      rejection_reason: reason,
-    }).eq('id', item.id)
+    const payload = { status: 'rejected', reviewed_by: reviewerId, reviewed_at: new Date().toISOString(), rejection_reason: reason }
+    if (item.type === 'credit') {
+      await supabase.from('payments').update(payload as any).eq('id', item.id)
+    } else {
+      await supabase.from('rental_payments').update(payload as any).eq('id', item.id)
+    }
     await fetch()
   }
 

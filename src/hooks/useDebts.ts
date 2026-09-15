@@ -41,7 +41,7 @@ export function useUserDebts(userId: string | undefined) {
       return
     }
 
-    const debtIds = memberRows.map(r => r.debt_id)
+    const debtIds = memberRows.map(r => (r as { debt_id: string }).debt_id)
     const { data } = await supabase
       .from('debts')
       .select(`*, debt_members(*, profile:profiles(*))`)
