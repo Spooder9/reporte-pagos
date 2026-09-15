@@ -133,7 +133,7 @@ export default function Layout() {
           <CardIcon className="w-5 h-5 text-white" />
         </div>
         <div>
-          <span className="text-white font-bold text-sm leading-tight block">FlowDebt</span>
+          <span className="text-white font-bold text-sm leading-tight block">Pagatón</span>
           <span className="text-gray-400 text-xs">{roleLabel(profile?.role)}</span>
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function Layout() {
               <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center">
                 <CardIcon className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold text-gray-800 dark:text-white text-sm">FlowDebt</span>
+              <span className="font-bold text-gray-800 dark:text-white text-sm">Pagatón</span>
             </div>
           </div>
           <div className="flex items-center gap-2">

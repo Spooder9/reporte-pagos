@@ -26,7 +26,7 @@ export default function Login() {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-2xl shadow-2xl mb-4">
           <CreditCard className="w-9 h-9 text-white" />
         </div>
-        <h1 className="text-4xl font-extrabold text-white tracking-tight">FlowDebt</h1>
+        <h1 className="text-4xl font-extrabold text-white tracking-tight">Pagatón</h1>
         <p className="text-gray-400 mt-2 text-sm">Sistema de gestión de créditos y deudas</p>
       </div>
 
@@ -82,7 +82,7 @@ export default function Login() {
 
       </div>
 
-      <p className="mt-8 text-gray-500 text-xs">© 2025 FlowDebt · Todos los derechos reservados</p>
+      <p className="mt-8 text-gray-500 text-xs">© 2025 Pagatón · Todos los derechos reservados</p>
     </div>
   )
 }
