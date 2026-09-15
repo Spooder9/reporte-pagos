@@ -8,9 +8,16 @@ import DebtCreate from './pages/admin/DebtCreate'
 import AllDebts from './pages/admin/AllDebts'
 import UserManagement from './pages/admin/UserManagement'
 import Reports from './pages/admin/Reports'
+import RentalManagement from './pages/admin/RentalManagement'
+import RentalReports from './pages/admin/RentalReports'
 import UserDashboard from './pages/user/Dashboard'
 import MyDebts from './pages/user/MyDebts'
 import ReportPayment from './pages/user/ReportPayment'
+import MyRentals from './pages/user/MyRentals'
+import ReportRentalPayment from './pages/user/ReportRentalPayment'
+import Approvals from './pages/admin/Approvals'
+import PaymentHistory from './pages/admin/PaymentHistory'
+import PaymentStatus from './pages/user/PaymentStatus'
 
 function PrivateRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { session, profile, loading } = useAuth()
@@ -37,12 +44,26 @@ function AppRoutes() {
         <Route path="dashboard" element={
           profile?.role === 'admin' ? <AdminDashboard /> : <UserDashboard />
         } />
+        {/* Admin - Créditos */}
         <Route path="crear-deuda" element={<PrivateRoute adminOnly><DebtCreate /></PrivateRoute>} />
         <Route path="todas-las-deudas" element={<PrivateRoute adminOnly><AllDebts /></PrivateRoute>} />
-        <Route path="usuarios" element={<PrivateRoute adminOnly><UserManagement /></PrivateRoute>} />
         <Route path="reportes" element={<PrivateRoute adminOnly><Reports /></PrivateRoute>} />
+        {/* Admin - Alquileres */}
+        <Route path="alquileres" element={<PrivateRoute adminOnly><RentalManagement /></PrivateRoute>} />
+        <Route path="reportes-alquileres" element={<PrivateRoute adminOnly><RentalReports /></PrivateRoute>} />
+        {/* Admin - Aprobaciones e Historial */}
+        <Route path="aprobaciones" element={<PrivateRoute adminOnly><Approvals /></PrivateRoute>} />
+        <Route path="historial-pagos" element={<PrivateRoute adminOnly><PaymentHistory /></PrivateRoute>} />
+        {/* Admin - Usuarios */}
+        <Route path="usuarios" element={<PrivateRoute adminOnly><UserManagement /></PrivateRoute>} />
+        {/* User - Créditos */}
         <Route path="mis-deudas" element={<PrivateRoute><MyDebts /></PrivateRoute>} />
         <Route path="reportar-pago" element={<PrivateRoute><ReportPayment /></PrivateRoute>} />
+        {/* User - Alquileres */}
+        <Route path="mis-vehiculos" element={<PrivateRoute><MyRentals /></PrivateRoute>} />
+        <Route path="reportar-alquiler" element={<PrivateRoute><ReportRentalPayment /></PrivateRoute>} />
+        {/* User - Estado de pagos */}
+        <Route path="mis-pagos" element={<PrivateRoute><PaymentStatus /></PrivateRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
