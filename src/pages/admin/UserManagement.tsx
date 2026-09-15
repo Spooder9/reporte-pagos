@@ -24,10 +24,10 @@ export default function UserManagement() {
     if (Object.keys(errs).length > 0) return
 
     setSaving(true)
-    const { error } = await supabase.auth.admin.createUser({
-      email: form.email, password: form.password,
-      user_metadata: { name: form.name, role: 'user' },
-      email_confirm: true,
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: { data: { name: form.name, role: 'user' } },
     })
 
     if (error) {
@@ -36,17 +36,17 @@ export default function UserManagement() {
       return
     }
 
-    // Update phone if provided
-    if (form.phone) {
-      // Will be handled by trigger, but we can update after
+    // Actualizar teléfono en el perfil si se proporcionó
+    if (form.phone && data.user?.id) {
+      await supabase.from('profiles').update({ phone: form.phone }).eq('id', data.user.id)
     }
 
-    setSuccess('Usuario creado exitosamente')
+    setSuccess('Usuario creado. Si el email necesita confirmación, el usuario recibirá un correo.')
     setForm({ name: '', email: '', password: '', phone: '' })
     setShowForm(false)
     setSaving(false)
-    refetch()
-    setTimeout(() => setSuccess(''), 3000)
+    setTimeout(() => refetch(), 1500)
+    setTimeout(() => setSuccess(''), 5000)
   }
 
   if (loading) return <LoadingSpinner />
