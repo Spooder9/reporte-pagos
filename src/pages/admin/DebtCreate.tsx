@@ -134,7 +134,7 @@ export default function DebtCreate() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Monto ($) *</label>
-              <input type="number" value={form.amount} onChange={set('amount')} placeholder="0" min="0" step="1000" className="input-field" />
+              <input type="number" value={form.amount} onChange={set('amount')} placeholder="0" min="0" step="any" className="input-field" />
               {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
             </div>
             <div>
