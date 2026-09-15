@@ -8,7 +8,7 @@ import { Plus, Trash2, Calculator, CheckCircle, AlertCircle } from 'lucide-react
 export default function DebtCreate() {
   const { profile } = useAuth()
   const { profiles } = useProfiles()
-  const users = profiles.filter(p => p.role === 'user')
+  const users = profiles.filter(p => p.role === 'user' || p.role === 'empleado')
 
   const [success, setSuccess] = useState(false)
   const [saving, setSaving] = useState(false)
