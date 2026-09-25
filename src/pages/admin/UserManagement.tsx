@@ -69,11 +69,14 @@ export default function UserManagement() {
       return
     }
 
-    if (form.phone && data.user?.id) {
-      await supabase.from('profiles').update({ phone: form.phone } as any).eq('id', data.user.id)
+    if (data.user?.id) {
+      await supabase.rpc('admin_confirm_user', { user_id: data.user.id })
+      if (form.phone) {
+        await supabase.from('profiles').update({ phone: form.phone } as any).eq('id', data.user.id)
+      }
     }
 
-    setSuccess('Usuario creado. Si el email necesita confirmación, el usuario recibirá un correo.')
+    setSuccess('Usuario creado exitosamente. Ya puede iniciar sesión.')
     setForm({ name: '', email: '', password: '', phone: '' })
     setShowForm(false)
     setSaving(false)
