@@ -6,6 +6,12 @@ create or replace function public.admin_update_user(
 )
 returns void as $$
 begin
+  if not exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  ) then
+    raise exception 'Solo administradores pueden modificar usuarios';
+  end if;
+
   if new_name is not null and trim(new_name) != '' then
     update public.profiles
     set name = trim(new_name)
