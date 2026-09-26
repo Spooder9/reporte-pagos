@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useProfiles } from '../../hooks/useProfiles'
 import { useAuth } from '../../context/AuthContext'
-import { CheckCircle, Plus, X, Loader2, Pencil, Save } from 'lucide-react'
+import { CheckCircle, Plus, X, Loader2, Pencil, Save, KeyRound } from 'lucide-react'
 import LoadingSpinner from '../../components/LoadingSpinner'
 
 type Role = 'admin' | 'empleado' | 'user'
@@ -39,10 +39,13 @@ export default function UserManagement() {
   const [success, setSuccess] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Role editing state
+  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [pendingRole, setPendingRole] = useState<Role>('user')
-  const [savingRole, setSavingRole] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editRole, setEditRole] = useState<Role>('user')
+  const [editPassword, setEditPassword] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editError, setEditError] = useState('')
 
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -96,29 +99,43 @@ export default function UserManagement() {
     setTimeout(() => setSuccess(''), 5000)
   }
 
-  const startEditRole = (id: string, currentRole: Role) => {
+  const startEdit = (id: string, currentRole: Role, currentName: string) => {
     setEditingId(id)
-    setPendingRole(currentRole)
+    setEditRole(currentRole)
+    setEditName(currentName)
+    setEditPassword('')
+    setEditError('')
   }
 
-  const cancelEditRole = () => {
+  const cancelEdit = () => {
     setEditingId(null)
+    setEditError('')
   }
 
-  const saveRole = async (id: string) => {
-    setSavingRole(true)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ role: pendingRole } as any)
-      .eq('id', id)
+  const saveEdit = async (id: string, originalRole: Role) => {
+    if (!editName.trim()) { setEditError('El nombre es requerido'); return }
+    if (editPassword && editPassword.length < 6) { setEditError('La contraseña debe tener mínimo 6 caracteres'); return }
+    setSavingEdit(true)
+    setEditError('')
 
-    setSavingRole(false)
-    if (error) {
-      alert('Error al actualizar el rol: ' + error.message)
-      return
+    // Actualizar nombre y/o contraseña via RPC
+    const { error: rpcError } = await supabase.rpc('admin_update_user', {
+      target_user_id: id,
+      new_name: editName.trim(),
+      new_password: editPassword || null,
+    } as any)
+
+    if (rpcError) { setEditError('Error al actualizar: ' + rpcError.message); setSavingEdit(false); return }
+
+    // Actualizar rol si cambió
+    if (editRole !== originalRole) {
+      const { error: roleError } = await supabase.from('profiles').update({ role: editRole } as any).eq('id', id)
+      if (roleError) { setEditError('Error al actualizar rol: ' + roleError.message); setSavingEdit(false); return }
     }
+
+    setSavingEdit(false)
     setEditingId(null)
-    setSuccess('Rol actualizado correctamente.')
+    setSuccess('Usuario actualizado correctamente.')
     setTimeout(() => setSuccess(''), 4000)
     refetch()
   }
@@ -202,37 +219,53 @@ export default function UserManagement() {
                   </div>
                   {!isSelf && !isEditing && (
                     <button
-                      onClick={() => startEditRole(p.id, p.role as Role)}
+                      onClick={() => startEdit(p.id, p.role as Role, p.name)}
                       className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      title="Cambiar rol"
+                      title="Editar usuario"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
 
-                {/* Role display / editor */}
                 {isEditing ? (
                   <div className="mt-2 space-y-2">
+                    <input
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      placeholder="Nombre completo"
+                      className="input-field text-sm py-1.5"
+                    />
                     <select
-                      value={pendingRole}
-                      onChange={e => setPendingRole(e.target.value as Role)}
+                      value={editRole}
+                      onChange={e => setEditRole(e.target.value as Role)}
                       className="input-field text-sm py-1.5"
                     >
                       {ROLE_OPTIONS.map(o => (
                         <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                      <input
+                        type="password"
+                        value={editPassword}
+                        onChange={e => setEditPassword(e.target.value)}
+                        placeholder="Nueva contraseña (opcional)"
+                        className="input-field text-sm py-1.5 pl-8"
+                      />
+                    </div>
+                    {editError && <p className="text-red-500 text-xs">{editError}</p>}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => saveRole(p.id)}
-                        disabled={savingRole || pendingRole === p.role}
+                        onClick={() => saveEdit(p.id, p.role as Role)}
+                        disabled={savingEdit}
                         className="btn-primary flex items-center gap-1.5 text-xs py-1.5 px-3"
                       >
-                        {savingRole ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        {savingEdit ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                         Guardar
                       </button>
-                      <button onClick={cancelEditRole} className="btn-secondary text-xs py-1.5 px-3">
+                      <button onClick={cancelEdit} className="btn-secondary text-xs py-1.5 px-3">
                         Cancelar
                       </button>
                     </div>
