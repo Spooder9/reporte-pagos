@@ -57,6 +57,10 @@ export default function UserManagement() {
     if (Object.keys(errs).length > 0) return
 
     setSaving(true)
+
+    // Guardar sesión del admin antes del signUp (signUp puede reemplazarla)
+    const { data: { session: adminSession } } = await supabase.auth.getSession()
+
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -67,6 +71,14 @@ export default function UserManagement() {
       setErrors({ submit: error.message })
       setSaving(false)
       return
+    }
+
+    // Restaurar sesión del admin si fue reemplazada por la del nuevo usuario
+    if (adminSession && data.session) {
+      await supabase.auth.setSession({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      })
     }
 
     if (data.user?.id) {
