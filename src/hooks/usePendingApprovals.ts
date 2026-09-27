@@ -51,7 +51,7 @@ export function usePendingApprovals() {
   const fetch = useCallback(async () => {
     setLoading(true)
 
-    const [{ data: creditPayments }, { data: rentalPayments }] = await Promise.all([
+    const [cpResult, rpResult] = await Promise.all([
       supabase
         .from('payments')
         .select('*, profile:profiles(*), debt:debts(description, code)')
@@ -63,6 +63,10 @@ export function usePendingApprovals() {
         .eq('status', 'pending')
         .order('created_at', { ascending: false }),
     ])
+    if (cpResult.error) console.error('[usePendingApprovals] payments error:', cpResult.error)
+    if (rpResult.error) console.error('[usePendingApprovals] rental_payments error:', rpResult.error)
+    const creditPayments = cpResult.data
+    const rentalPayments = rpResult.data
 
     const credits: PendingPayment[] = (creditPayments ?? []).map((p: any) => ({
       id: p.id,
