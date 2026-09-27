@@ -54,33 +54,52 @@ export default function PaymentHistory() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
-    const [{ data: cp }, { data: rp }] = await Promise.all([
-      supabase.from('payments').select('*, profile:profiles(*), debt:debts(description, code)').order('created_at', { ascending: false }),
-      supabase.from('rental_payments').select('*, profile:profiles(*), rental:rentals(name, code)').order('created_at', { ascending: false }),
+
+    // Fetch without joins to avoid PostgREST excluding rows when debts/rentals
+    // RLS blocks the embedded resource join
+    const [cpRes, rpRes] = await Promise.all([
+      supabase.from('payments').select('*').order('created_at', { ascending: false }),
+      supabase.from('rental_payments').select('*').order('created_at', { ascending: false }),
     ])
 
-    const creditRows: HistoryRow[] = (cp ?? []).map((p: any) => ({
+    const cp = cpRes.data ?? []
+    const rp = rpRes.data ?? []
+
+    const userIds = [...new Set([...cp, ...rp].map((p: any) => p.user_id).filter(Boolean))]
+    const debtIds = [...new Set(cp.map((p: any) => p.debt_id).filter(Boolean))]
+    const rentalIds = [...new Set(rp.map((p: any) => p.rental_id).filter(Boolean))]
+
+    const [profilesRes, debtsRes, rentalsRes] = await Promise.all([
+      userIds.length > 0 ? supabase.from('profiles').select('id, name, email').in('id', userIds) : Promise.resolve({ data: [] }),
+      debtIds.length > 0 ? supabase.from('debts').select('id, description, code').in('id', debtIds) : Promise.resolve({ data: [] }),
+      rentalIds.length > 0 ? supabase.from('rentals').select('id, name, code').in('id', rentalIds) : Promise.resolve({ data: [] }),
+    ])
+
+    const pm: Record<string, any> = Object.fromEntries((profilesRes.data ?? []).map((x: any) => [x.id, x]))
+    const dm: Record<string, any> = Object.fromEntries((debtsRes.data ?? []).map((x: any) => [x.id, x]))
+    const rm: Record<string, any> = Object.fromEntries((rentalsRes.data ?? []).map((x: any) => [x.id, x]))
+
+    const creditRows: HistoryRow[] = cp.map((p: any) => ({
       id: p.id, type: 'credit',
-      user_name: p.profile?.name ?? '—', user_email: p.profile?.email ?? '',
-      reference: p.debt?.description ?? '—', reference_code: p.debt?.code ?? '—',
+      user_name: pm[p.user_id]?.name ?? '—', user_email: pm[p.user_id]?.email ?? '',
+      reference: dm[p.debt_id]?.description ?? '—', reference_code: dm[p.debt_id]?.code ?? '—',
       amount: p.amount, date: p.date, receipt_number: p.receipt_number,
       comment: p.comment, status: p.status,
       rejection_reason: p.rejection_reason, created_at: p.created_at,
     }))
 
-    const rentalRows: HistoryRow[] = (rp ?? []).map((p: any) => ({
+    const rentalRows: HistoryRow[] = rp.map((p: any) => ({
       id: p.id, type: 'rental',
-      user_name: p.profile?.name ?? '—', user_email: p.profile?.email ?? '',
-      reference: p.rental?.name ?? '—', reference_code: p.rental?.code ?? '—',
+      user_name: pm[p.user_id]?.name ?? '—', user_email: pm[p.user_id]?.email ?? '',
+      reference: rm[p.rental_id]?.name ?? '—', reference_code: rm[p.rental_id]?.code ?? '—',
       amount: p.amount, date: p.date, receipt_number: p.receipt_number,
       comment: p.comment, period_label: p.period_label, status: p.status,
       rejection_reason: p.rejection_reason, created_at: p.created_at,
     }))
 
-    const all = [...creditRows, ...rentalRows].sort(
+    setRows([...creditRows, ...rentalRows].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-    setRows(all)
+    ))
     setLoading(false)
   }, [])
 
