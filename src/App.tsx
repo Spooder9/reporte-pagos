@@ -22,6 +22,7 @@ import PaymentStatus from './pages/user/PaymentStatus'
 import EmpleadoDashboard from './pages/empleado/Dashboard'
 import ManagedDebts from './pages/empleado/ManagedDebts'
 import EmpleadoApprovals from './pages/empleado/EmpleadoApprovals'
+import ResetPassword from './pages/ResetPassword'
 
 function PrivateRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { session, profile, loading } = useAuth()
@@ -43,6 +44,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={

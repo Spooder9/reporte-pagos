@@ -142,7 +142,7 @@ export default function RentalManagement() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Tarifa de referencia ($)</label>
-                <input type="number" value={form.reference_rate} onChange={set('reference_rate')} placeholder="0" min="0" step="1000" className="input-field" />
+                <input type="number" value={form.reference_rate} onChange={set('reference_rate')} placeholder="0" min="0" step="any" className="input-field" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Período de tarifa</label>
