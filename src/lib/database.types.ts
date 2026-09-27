@@ -65,6 +65,10 @@ export interface Database {
           date: string
           receipt_number: string
           comment: string | null
+          status: 'pending' | 'approved' | 'rejected'
+          rejection_reason: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['payments']['Row'], 'id' | 'created_at'>
@@ -98,6 +102,10 @@ export interface Database {
           period_label: string | null
           receipt_number: string
           comment: string | null
+          status: 'pending' | 'approved' | 'rejected'
+          rejection_reason: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['rental_payments']['Row'], 'id' | 'created_at'>
