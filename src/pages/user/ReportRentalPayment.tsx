@@ -56,6 +56,7 @@ export default function ReportRentalPayment() {
       period_label: form.periodLabel || null,
       receipt_number: form.receiptNumber,
       comment: form.comment || null,
+      status: 'pending',
     })
 
     setSaving(false)

@@ -51,6 +51,7 @@ export default function ReportPayment() {
       amount: parseFloat(form.amount), date: form.date,
       receipt_number: form.receiptNumber,
       comment: form.comment || null,
+      status: 'pending',
     })
 
     setSaving(false)
