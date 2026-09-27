@@ -51,7 +51,7 @@ export default function AllDebts() {
             <p className="text-gray-400">No se encontraron deudas</p>
           </div>
         ) : filtered.map(debt => {
-          const paid = payments.filter(p => p.debt_id === debt.id).reduce((s, p) => s + p.amount, 0)
+          const paid = payments.filter(p => p.debt_id === debt.id && p.status === 'approved').reduce((s, p) => s + p.amount, 0)
           const pct = debt.total_amount > 0 ? Math.round((paid / debt.total_amount) * 100) : 0
           return (
             <div key={debt.id} className="card">

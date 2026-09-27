@@ -12,7 +12,8 @@ export default function Reports() {
 
   if (ld || lp) return <LoadingSpinner />
 
-  const totalCollected = payments.reduce((s, p) => s + p.amount, 0)
+  const approvedPayments = payments.filter(p => p.status === 'approved')
+  const totalCollected = approvedPayments.reduce((s, p) => s + p.amount, 0)
   const totalDebt = debts.reduce((s, d) => s + d.total_amount, 0)
   const totalPending = totalDebt - totalCollected
 
@@ -47,7 +48,7 @@ export default function Reports() {
         <h2 className="text-base font-semibold text-gray-800 mb-4">Estado por Crédito</h2>
         <div className="space-y-4">
           {debts.map(debt => {
-            const paid = payments.filter(p => p.debt_id === debt.id).reduce((s, p) => s + p.amount, 0)
+            const paid = approvedPayments.filter(p => p.debt_id === debt.id).reduce((s, p) => s + p.amount, 0)
             const pct = debt.total_amount > 0 ? Math.round((paid / debt.total_amount) * 100) : 0
             const count = payments.filter(p => p.debt_id === debt.id).length
             return (

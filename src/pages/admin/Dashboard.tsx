@@ -15,7 +15,8 @@ export default function AdminDashboard() {
 
   if (loadingDebts || loadingPayments || loadingProfiles) return <LoadingSpinner />
 
-  const totalCollected = payments.reduce((s, p) => s + p.amount, 0)
+  const approvedPayments = payments.filter(p => p.status === 'approved')
+  const totalCollected = approvedPayments.reduce((s, p) => s + p.amount, 0)
   const totalDebt = debts.reduce((s, d) => s + d.total_amount, 0)
   const totalPending = totalDebt - totalCollected
   const userCount = profiles.filter(p => p.role === 'user').length
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
           </div>
           <div className="space-y-3">
             {debts.slice(0, 5).map(d => {
-              const paid = payments.filter(p => p.debt_id === d.id).reduce((s, p) => s + p.amount, 0)
+              const paid = approvedPayments.filter(p => p.debt_id === d.id).reduce((s, p) => s + p.amount, 0)
               const pct = d.total_amount > 0 ? Math.round((paid / d.total_amount) * 100) : 0
               return (
                 <div key={d.id} className="p-3 bg-gray-50 rounded-xl">

@@ -23,7 +23,7 @@ export default function ReportPayment() {
   const activeDebts = debts.filter(d => d.status === 'active')
   const selectedDebt = debts.find(d => d.id === form.debtId)
   const myShare = selectedDebt?.debt_members?.find(m => m.user_id === profile?.id)?.share ?? 0
-  const myPaid = payments.filter(p => p.debt_id === form.debtId).reduce((s, p) => s + p.amount, 0)
+  const myPaid = payments.filter(p => p.debt_id === form.debtId && p.status === 'approved').reduce((s, p) => s + p.amount, 0)
   const myTotal = selectedDebt ? selectedDebt.total_amount * myShare / 100 : 0
   const myPending = Math.max(0, myTotal - myPaid)
 

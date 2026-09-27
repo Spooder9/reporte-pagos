@@ -29,7 +29,7 @@ export default function MyDebts() {
       ) : debts.map(debt => {
         const myShare = debt.debt_members?.find(m => m.user_id === profile?.id)?.share ?? 0
         const myTotal = debt.total_amount * myShare / 100
-        const myPaid = payments.filter(p => p.debt_id === debt.id).reduce((s, p) => s + p.amount, 0)
+        const myPaid = payments.filter(p => p.debt_id === debt.id && p.status === 'approved').reduce((s, p) => s + p.amount, 0)
         const pct = myTotal > 0 ? Math.round((myPaid / myTotal) * 100) : 0
         const myPayments = payments.filter(p => p.debt_id === debt.id)
         const others = debt.debt_members?.filter(m => m.user_id !== profile?.id) ?? []

@@ -17,13 +17,26 @@ export default function EmpleadoDashboard() {
   useEffect(() => {
     if (!profile?.id) return
     async function load() {
-      const [{ data: d }, { data: p }] = await Promise.all([
-        supabase.from('debts').select('*, debt_members(*, profile:profiles(*))').eq('managed_by', profile!.id).eq('status', 'active'),
-        supabase.from('payments').select('*, profile:profiles(*), debt:debts(description, code)').eq('status', 'pending')
-      ])
-      // Filter pending payments to only debts managed by this employee
+      const { data: d } = await supabase
+        .from('debts').select('*, debt_members(*, profile:profiles(*))').eq('managed_by', profile!.id).eq('status', 'active')
       const myDebtIds = (d ?? []).map((x: any) => x.id)
-      const myPending = (p ?? []).filter((pay: any) => myDebtIds.includes(pay.debt_id))
+
+      let myPending: any[] = []
+      if (myDebtIds.length > 0) {
+        const { data: rawP } = await supabase
+          .from('payments').select('*').eq('status', 'pending').in('debt_id', myDebtIds)
+        const pays = rawP ?? []
+        const userIds = [...new Set(pays.map((p: any) => p.user_id).filter(Boolean))]
+        const debtIds = [...new Set(pays.map((p: any) => p.debt_id).filter(Boolean))]
+        const [{ data: profs }, { data: dts }] = await Promise.all([
+          userIds.length > 0 ? supabase.from('profiles').select('id, name').in('id', userIds) : Promise.resolve({ data: [] }),
+          debtIds.length > 0 ? supabase.from('debts').select('id, description, code').in('id', debtIds) : Promise.resolve({ data: [] }),
+        ])
+        const pm: Record<string, any> = Object.fromEntries((profs ?? []).map((x: any) => [x.id, x]))
+        const dm: Record<string, any> = Object.fromEntries((dts ?? []).map((x: any) => [x.id, x]))
+        myPending = pays.map((p: any) => ({ ...p, profile: pm[p.user_id], debt: dm[p.debt_id] }))
+      }
+
       setDebts(d ?? [])
       setPendingPayments(myPending)
       setLoading(false)
