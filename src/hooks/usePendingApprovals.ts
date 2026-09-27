@@ -51,60 +51,56 @@ export function usePendingApprovals() {
   const fetch = useCallback(async () => {
     setLoading(true)
 
+    // Fetch payments and rental_payments without joins to avoid PostgREST
+    // excluding rows when joined table RLS blocks the relation
     const [cpResult, rpResult] = await Promise.all([
-      supabase
-        .from('payments')
-        .select('*, profile:profiles(*), debt:debts(description, code)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('rental_payments')
-        .select('*, profile:profiles(*), rental:rentals(name, code)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
+      supabase.from('payments').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
+      supabase.from('rental_payments').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
     ])
-    if (cpResult.error) console.error('[usePendingApprovals] payments error:', cpResult.error)
-    if (rpResult.error) console.error('[usePendingApprovals] rental_payments error:', rpResult.error)
-    const creditPayments = cpResult.data
-    const rentalPayments = rpResult.data
 
-    const credits: PendingPayment[] = (creditPayments ?? []).map((p: any) => ({
-      id: p.id,
-      type: 'credit' as const,
-      user_id: p.user_id,
-      amount: p.amount,
-      date: p.date,
-      receipt_number: p.receipt_number,
-      comment: p.comment,
-      created_at: p.created_at,
-      status: p.status,
-      profile: p.profile,
+    const cp = cpResult.data ?? []
+    const rp = rpResult.data ?? []
+
+    // Collect IDs for related data
+    const userIds = [...new Set([...cp, ...rp].map((p: any) => p.user_id).filter(Boolean))]
+    const debtIds = [...new Set(cp.map((p: any) => p.debt_id).filter(Boolean))]
+    const rentalIds = [...new Set(rp.map((p: any) => p.rental_id).filter(Boolean))]
+
+    const [profilesRes, debtsRes, rentalsRes] = await Promise.all([
+      userIds.length > 0 ? supabase.from('profiles').select('*').in('id', userIds) : Promise.resolve({ data: [] }),
+      debtIds.length > 0 ? supabase.from('debts').select('id, description, code').in('id', debtIds) : Promise.resolve({ data: [] }),
+      rentalIds.length > 0 ? supabase.from('rentals').select('id, name, code').in('id', rentalIds) : Promise.resolve({ data: [] }),
+    ])
+
+    const profilesMap: Record<string, any> = Object.fromEntries((profilesRes.data ?? []).map((p: any) => [p.id, p]))
+    const debtsMap: Record<string, any> = Object.fromEntries((debtsRes.data ?? []).map((d: any) => [d.id, d]))
+    const rentalsMap: Record<string, any> = Object.fromEntries((rentalsRes.data ?? []).map((r: any) => [r.id, r]))
+
+    const credits: PendingPayment[] = cp.map((p: any) => ({
+      id: p.id, type: 'credit' as const,
+      user_id: p.user_id, amount: p.amount, date: p.date,
+      receipt_number: p.receipt_number, comment: p.comment,
+      created_at: p.created_at, status: p.status,
+      profile: profilesMap[p.user_id],
       debt_id: p.debt_id,
-      debt_description: p.debt?.description,
-      debt_code: p.debt?.code,
+      debt_description: debtsMap[p.debt_id]?.description,
+      debt_code: debtsMap[p.debt_id]?.code,
     }))
 
-    const rentals: PendingPayment[] = (rentalPayments ?? []).map((p: any) => ({
-      id: p.id,
-      type: 'rental' as const,
-      user_id: p.user_id,
-      amount: p.amount,
-      date: p.date,
-      receipt_number: p.receipt_number,
-      comment: p.comment,
-      period_label: p.period_label,
-      created_at: p.created_at,
-      status: p.status,
-      profile: p.profile,
+    const rentals: PendingPayment[] = rp.map((p: any) => ({
+      id: p.id, type: 'rental' as const,
+      user_id: p.user_id, amount: p.amount, date: p.date,
+      receipt_number: p.receipt_number, comment: p.comment,
+      period_label: p.period_label, created_at: p.created_at, status: p.status,
+      profile: profilesMap[p.user_id],
       rental_id: p.rental_id,
-      rental_name: p.rental?.name,
-      rental_code: p.rental?.code,
+      rental_name: rentalsMap[p.rental_id]?.name,
+      rental_code: rentalsMap[p.rental_id]?.code,
     }))
 
-    const all = [...credits, ...rentals].sort(
+    setItems([...credits, ...rentals].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-    setItems(all)
+    ))
     setLoading(false)
   }, [])
 
